@@ -18,48 +18,30 @@ body {
 }
 
 /* Floating hearts */
-.heart {
-  position: absolute;
-  animation: float 6s linear infinite;
-}
-@keyframes float {
-  from { transform: translateY(100vh); opacity: 1; }
-  to { transform: translateY(-10vh); opacity: 0; }
-}
+.heart { position: absolute; animation: float 6s linear infinite; }
+@keyframes float { from { transform: translateY(100vh); opacity: 1; } to { transform: translateY(-10vh); opacity: 0; } }
 
 /* Envelope */
 .envelope {
-  width: 300px;
-  height: 180px;
+  width: 300px; height: 180px;
   background: #ff4d6d;
-  position: relative;
-  cursor: pointer;
+  position: relative; cursor: pointer;
   border-radius: 10px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.3);
   transition: transform 1s ease;
 }
-
 .flap {
   position: absolute;
-  width: 0;
-  height: 0;
+  width: 0; height: 0;
   border-left: 150px solid transparent;
   border-right: 150px solid transparent;
   border-bottom: 90px solid #ff3355;
-  top: -90px;
-  transform-origin: bottom;
+  top: -90px; transform-origin: bottom;
   transition: transform 1s ease;
 }
 
 /* Card */
-.card-container {
-  position: absolute;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
+.card-container { position: absolute; display: none; justify-content: center; align-items: center; padding: 20px; }
 .card {
   background: white;
   padding: 35px;
@@ -71,19 +53,9 @@ body {
 }
 
 .card h1 { color: #ff4d6d; }
-
 .typing { min-height: 30px; margin: 10px 0; }
-
-.countdown {
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #ff4d6d;
-}
-
-.buttons {
-  position: relative;
-  height: 100px;
-}
+.countdown { font-weight: bold; margin-bottom: 15px; color: #ff4d6d; }
+.buttons { position: relative; height: 100px; }
 
 button {
   padding: 12px 24px;
@@ -94,24 +66,11 @@ button {
   position: absolute;
   transition: 0.2s;
 }
+#yesBtn { background: #ff4d6d; color: white; left: 15%; }
+#yesBtn.glow { box-shadow: 0 0 20px 8px #ff4d6d; transform: scale(1.1); transition: 0.3s; }
+#noBtn { background: #ddd; right: 15%; }
 
-#yesBtn {
-  background: #ff4d6d;
-  color: white;
-  left: 15%;
-}
-
-#noBtn {
-  background: #ddd;
-  right: 15%;
-}
-
-.message {
-  margin-top: 20px;
-  font-size: 18px;
-  color: #ff4d6d;
-  font-weight: bold;
-}
+.message { margin-top: 20px; font-size: 18px; color: #ff4d6d; font-weight: bold; }
 </style>
 </head>
 
@@ -137,8 +96,14 @@ button {
   </div>
 </div>
 
+<!-- Background music -->
 <audio id="bgMusic" loop>
   <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-110624.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Wrong answer sound -->
+<audio id="wrongSound">
+  <source src="https://www.soundjay.com/button/sounds/button-10.mp3" type="audio/mpeg">
 </audio>
 
 <script>
@@ -147,7 +112,9 @@ const flap = document.getElementById("flap");
 const cardContainer = document.getElementById("cardContainer");
 const music = document.getElementById("bgMusic");
 const noBtn = document.getElementById("noBtn");
+const yesBtn = document.getElementById("yesBtn");
 const buttonArea = document.getElementById("buttonArea");
+const wrongSound = document.getElementById("wrongSound");
 
 /* Envelope open */
 envelope.addEventListener("click", () => {
@@ -160,13 +127,12 @@ envelope.addEventListener("click", () => {
     startTyping();
     startCountdown();
 
-    // Play music (mobile safe because it's inside click event)
+    // Play music (mobile safe)
     music.volume = 0;
     music.play().then(() => {
       let fadeIn = setInterval(() => {
-        if (music.volume < 0.8) {
-          music.volume += 0.05;
-        } else clearInterval(fadeIn);
+        if (music.volume < 0.8) music.volume += 0.05;
+        else clearInterval(fadeIn);
       }, 200);
     }).catch(() => {});
   }, 1000);
@@ -193,54 +159,53 @@ function startCountdown() {
     let year = now.getFullYear();
     let valentines = new Date(year, 1, 14);
     if (now > valentines) valentines = new Date(year + 1, 1, 14);
-
     const diff = valentines - now;
     const d = Math.floor(diff / (1000*60*60*24));
     const h = Math.floor((diff/(1000*60*60))%24);
     const m = Math.floor((diff/(1000*60))%60);
     const s = Math.floor((diff/1000)%60);
-
-    document.getElementById("countdown").innerHTML =
-      `⏳ ${d}d ${h}h ${m}m ${s}s until Valentine’s Day`;
+    document.getElementById("countdown").innerHTML = `⏳ ${d}d ${h}h ${m}m ${s}s until Valentine’s Day`;
   }
   updateCountdown();
   setInterval(updateCountdown, 1000);
 }
 
-/* Move NO button (mouse + touch support) */
+/* Move NO button and trigger effects */
 function moveNoButton() {
   const areaRect = buttonArea.getBoundingClientRect();
   const btnRect = noBtn.getBoundingClientRect();
-
   const maxX = areaRect.width - btnRect.width;
   const maxY = areaRect.height - btnRect.height;
-
   const newX = Math.random() * maxX;
   const newY = Math.random() * maxY;
-
   noBtn.style.left = newX + "px";
   noBtn.style.top = newY + "px";
+
+  // Glow YES button
+  yesBtn.classList.add("glow");
+  setTimeout(()=>yesBtn.classList.remove("glow"),800);
+
+  // Vibrate phone
+  if (navigator.vibrate) navigator.vibrate(150);
+
+  // Play wrong answer sound
+  wrongSound.currentTime = 0;
+  wrongSound.play().catch(()=>{});
 }
 
 noBtn.addEventListener("mouseover", moveNoButton);
 noBtn.addEventListener("touchstart", moveNoButton);
 
 /* Yes button */
-document.getElementById("yesBtn").addEventListener("click", () => {
-  document.getElementById("message").innerHTML =
-    "Yayyy Gcinile!! 💕 I can't wait to spoil you 😘";
-
+yesBtn.addEventListener("click", () => {
+  document.getElementById("message").innerHTML = "Yayyy Gcinile!! 💕 I can't wait to spoil you 😘";
   startConfetti();
 
+  // Fade out music
   let fadeOut = setInterval(() => {
-    if (music.volume > 0.05) {
-      music.volume -= 0.05;
-    } else {
-      clearInterval(fadeOut);
-      music.pause();
-      music.currentTime = 0;
-    }
-  }, 200);
+    if (music.volume > 0.05) music.volume -= 0.05;
+    else { clearInterval(fadeOut); music.pause(); music.currentTime=0; }
+  },200);
 });
 
 /* Hearts */
@@ -269,10 +234,7 @@ function startConfetti(){
     document.body.appendChild(c);
     const x=(Math.random()-0.5)*600;
     const y=(Math.random()-0.5)*600;
-    c.animate([
-      {transform:"translate(0,0)",opacity:1},
-      {transform:`translate(${x}px,${y}px)`,opacity:0}
-    ],{duration:1500,easing:"ease-out"});
+    c.animate([{transform:"translate(0,0)",opacity:1},{transform:`translate(${x}px,${y}px)`,opacity:0}],{duration:1500,easing:"ease-out"});
     setTimeout(()=>c.remove(),1500);
   }
 }
