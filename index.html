@@ -22,7 +22,6 @@ body {
   position: absolute;
   animation: float 6s linear infinite;
 }
-
 @keyframes float {
   from { transform: translateY(100vh); opacity: 1; }
   to { transform: translateY(-10vh); opacity: 0; }
@@ -30,8 +29,8 @@ body {
 
 /* Envelope */
 .envelope {
-  width: 320px;
-  height: 200px;
+  width: 300px;
+  height: 180px;
   background: #ff4d6d;
   position: relative;
   cursor: pointer;
@@ -44,82 +43,72 @@ body {
   position: absolute;
   width: 0;
   height: 0;
-  border-left: 160px solid transparent;
-  border-right: 160px solid transparent;
-  border-bottom: 100px solid #ff3355;
-  top: -100px;
+  border-left: 150px solid transparent;
+  border-right: 150px solid transparent;
+  border-bottom: 90px solid #ff3355;
+  top: -90px;
   transform-origin: bottom;
   transition: transform 1s ease;
 }
 
-/* Card Container */
+/* Card */
 .card-container {
   position: absolute;
   display: none;
   justify-content: center;
   align-items: center;
+  padding: 20px;
 }
 
-/* Card */
 .card {
   background: white;
-  padding: 45px;
+  padding: 35px;
   border-radius: 20px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.25);
   text-align: center;
-  width: 440px;
+  width: 95%;
+  max-width: 420px;
 }
 
-.card h1 {
-  color: #ff4d6d;
-  margin-bottom: 10px;
-}
+.card h1 { color: #ff4d6d; }
 
-.typing {
-  min-height: 30px;
-  margin: 15px 0;
-  font-size: 16px;
-}
+.typing { min-height: 30px; margin: 10px 0; }
 
 .countdown {
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   color: #ff4d6d;
 }
 
 .buttons {
   position: relative;
-  height: 80px;
+  height: 100px;
 }
 
 button {
-  padding: 12px 28px;
+  padding: 12px 24px;
   border: none;
   border-radius: 30px;
   font-size: 16px;
   cursor: pointer;
   position: absolute;
-  transition: 0.3s;
+  transition: 0.2s;
 }
 
 #yesBtn {
   background: #ff4d6d;
   color: white;
-  left: 60px;
-}
-
-#yesBtn:hover {
-  transform: scale(1.1);
+  left: 15%;
 }
 
 #noBtn {
   background: #ddd;
-  right: 60px;
+  right: 15%;
 }
 
 .message {
   margin-top: 20px;
-  font-size: 20px;
+  font-size: 18px;
   color: #ff4d6d;
   font-weight: bold;
 }
@@ -128,12 +117,10 @@ button {
 
 <body>
 
-<!-- Envelope -->
 <div class="envelope" id="envelope">
   <div class="flap" id="flap"></div>
 </div>
 
-<!-- Card -->
 <div class="card-container" id="cardContainer">
   <div class="card">
     <h1>Gcinile 💕</h1>
@@ -141,7 +128,7 @@ button {
     <div class="countdown" id="countdown"></div>
     <h2>Will you be my Valentine? 💖</h2>
 
-    <div class="buttons">
+    <div class="buttons" id="buttonArea">
       <button id="yesBtn">Yes 😍</button>
       <button id="noBtn">No 🙈</button>
     </div>
@@ -150,7 +137,6 @@ button {
   </div>
 </div>
 
-<!-- Romantic Piano Music -->
 <audio id="bgMusic" loop>
   <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-110624.mp3" type="audio/mpeg">
 </audio>
@@ -160,8 +146,10 @@ const envelope = document.getElementById("envelope");
 const flap = document.getElementById("flap");
 const cardContainer = document.getElementById("cardContainer");
 const music = document.getElementById("bgMusic");
+const noBtn = document.getElementById("noBtn");
+const buttonArea = document.getElementById("buttonArea");
 
-// Envelope open animation
+/* Envelope open */
 envelope.addEventListener("click", () => {
   flap.style.transform = "rotateX(180deg)";
   envelope.style.transform = "scale(0)";
@@ -172,21 +160,19 @@ envelope.addEventListener("click", () => {
     startTyping();
     startCountdown();
 
-    // Fade in music
+    // Play music (mobile safe because it's inside click event)
     music.volume = 0;
-    music.play();
-    let fadeIn = setInterval(() => {
-      if (music.volume < 0.8) {
-        music.volume += 0.05;
-      } else {
-        clearInterval(fadeIn);
-      }
-    }, 200);
-
+    music.play().then(() => {
+      let fadeIn = setInterval(() => {
+        if (music.volume < 0.8) {
+          music.volume += 0.05;
+        } else clearInterval(fadeIn);
+      }, 200);
+    }).catch(() => {});
   }, 1000);
 });
 
-// Typing animation
+/* Typing */
 const text = "From the moment I met you, you became my favorite notification 💌";
 let index = 0;
 function startTyping() {
@@ -200,7 +186,7 @@ function startTyping() {
   typeEffect();
 }
 
-// Countdown
+/* Countdown */
 function startCountdown() {
   function updateCountdown() {
     const now = new Date();
@@ -221,22 +207,31 @@ function startCountdown() {
   setInterval(updateCountdown, 1000);
 }
 
-// No button runs away
-const noBtn = document.getElementById("noBtn");
-noBtn.addEventListener("mouseover", () => {
-  const x = Math.random()*250 -125;
-  const y = Math.random()*150 -75;
-  noBtn.style.transform = `translate(${x}px,${y}px)`;
-});
+/* Move NO button (mouse + touch support) */
+function moveNoButton() {
+  const areaRect = buttonArea.getBoundingClientRect();
+  const btnRect = noBtn.getBoundingClientRect();
 
-// Yes button
+  const maxX = areaRect.width - btnRect.width;
+  const maxY = areaRect.height - btnRect.height;
+
+  const newX = Math.random() * maxX;
+  const newY = Math.random() * maxY;
+
+  noBtn.style.left = newX + "px";
+  noBtn.style.top = newY + "px";
+}
+
+noBtn.addEventListener("mouseover", moveNoButton);
+noBtn.addEventListener("touchstart", moveNoButton);
+
+/* Yes button */
 document.getElementById("yesBtn").addEventListener("click", () => {
   document.getElementById("message").innerHTML =
     "Yayyy Gcinile!! 💕 I can't wait to spoil you 😘";
 
   startConfetti();
 
-  // Fade out music
   let fadeOut = setInterval(() => {
     if (music.volume > 0.05) {
       music.volume -= 0.05;
@@ -248,7 +243,7 @@ document.getElementById("yesBtn").addEventListener("click", () => {
   }, 200);
 });
 
-// Floating hearts
+/* Hearts */
 function createHeart() {
   const heart = document.createElement("div");
   heart.className = "heart";
@@ -260,9 +255,9 @@ function createHeart() {
 }
 setInterval(createHeart,500);
 
-// Confetti
+/* Confetti */
 function startConfetti(){
-  for(let i=0;i<120;i++){
+  for(let i=0;i<100;i++){
     const c=document.createElement("div");
     c.style.position="absolute";
     c.style.width="8px";
@@ -272,13 +267,13 @@ function startConfetti(){
     c.style.left="50%";
     c.style.borderRadius="50%";
     document.body.appendChild(c);
-    const x=(Math.random()-0.5)*700;
-    const y=(Math.random()-0.5)*700;
+    const x=(Math.random()-0.5)*600;
+    const y=(Math.random()-0.5)*600;
     c.animate([
       {transform:"translate(0,0)",opacity:1},
       {transform:`translate(${x}px,${y}px)`,opacity:0}
-    ],{duration:1800,easing:"ease-out"});
-    setTimeout(()=>c.remove(),1800);
+    ],{duration:1500,easing:"ease-out"});
+    setTimeout(()=>c.remove(),1500);
   }
 }
 </script>
